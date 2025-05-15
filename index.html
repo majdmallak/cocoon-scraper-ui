@@ -8,11 +8,15 @@
 </head>
 <body>
   <h1>🛍️ CocoonCenter Scraper</h1>
+
   <div class="controls">
     <label for="brand">Marque :</label>
-    <input id="brand" type="text" placeholder="Entrez le slug de la marque" />
+    <select id="brand">
+      <option value="">Chargement…</option>
+    </select>
     <button id="scrape">Lancer le scraping</button>
   </div>
+
   <pre id="output">— résultats —</pre>
 
   <script src="script.js"></script>

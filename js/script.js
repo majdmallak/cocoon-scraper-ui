@@ -1,28 +1,49 @@
-// Adresse de votre backend sur Railway (ou localhost:8000 si dev local)
-const API_URL = "https://your-railway-app.up.railway.app/scrape";
+// 1) PUT YOUR RAILWAY BACKEND URL HERE:
+const BACKEND = "https://YOUR-RAILWAY-URL.up.railway.app";
 
-document.getElementById("scrape").addEventListener("click", async () => {
-  const slug = document.getElementById("brand").value.trim();
+const brandsSelect = document.getElementById("brand");
+const output     = document.getElementById("output");
+const btn        = document.getElementById("scrape");
+
+// 2) On page load, fetch all brands
+window.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const res = await fetch(`${BACKEND}/brands`);
+    const list = await res.json();
+    // clear placeholder
+    brandsSelect.innerHTML = `<option value="">— choisissez —</option>`;
+    for (const {name, slug} of list) {
+      const o = document.createElement("option");
+      o.value = slug;
+      o.textContent = name;
+      brandsSelect.append(o);
+    }
+  } catch (err) {
+    brandsSelect.innerHTML = `<option value="">Erreur de chargement</option>`;
+    console.error(err);
+  }
+});
+
+btn.addEventListener("click", async () => {
+  const slug = brandsSelect.value;
   if (!slug) {
-    alert("Merci d’entrer un slug de marque.");
+    alert("Merci de choisir une marque.");
     return;
   }
 
-  document.getElementById("output").textContent = "⏳ Scraping en cours…";
+  output.textContent = "⏳ Scraping en cours…";
   try {
-    const resp = await fetch(API_URL, {
+    const resp = await fetch(`${BACKEND}/scrape`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ slug }),
     });
     if (!resp.ok) {
-      throw new Error(`Erreur ${resp.status}: ${await resp.text()}`);
+      throw new Error(await resp.text());
     }
     const data = await resp.json();
-    document.getElementById("output").textContent =
-      JSON.stringify(data, null, 2);
+    output.textContent = JSON.stringify(data, null, 2);
   } catch (err) {
-    document.getElementById("output").textContent =
-      `🚨 Erreur: ${err.message}`;
+    output.textContent = `🚨 Erreur: ${err.message}`;
   }
 });
