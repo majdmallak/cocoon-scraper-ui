@@ -1,5 +1,5 @@
 // 1) PUT YOUR RAILWAY BACKEND URL HERE:
-const BACKEND = "cocoon-scraper-backend-production.up.railway.app";
+const BACKEND = "https://cocoon-scraper-backend-production.up.railway.app";
 
 const brandsSelect = document.getElementById("brand");
 const output     = document.getElementById("output");
