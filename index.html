@@ -1,16 +1,20 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>CocoonCenter Scraper</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>🛍️ CocoonCenter Scraper</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <h1>🛍️ CocoonCenter Scraper</h1>
-  <select id="brand-select"></select>
-  <button id="scrape-btn">Lancer le scraping</button>
-  <div id="spinner" hidden>Chargement…</div>
-  <pre id="output"></pre>
-  <script src="js/main.js"></script>
+  <div class="controls">
+    <label for="brand">Marque :</label>
+    <input id="brand" type="text" placeholder="Entrez le slug de la marque" />
+    <button id="scrape">Lancer le scraping</button>
+  </div>
+  <pre id="output">— résultats —</pre>
+
+  <script src="script.js"></script>
 </body>
 </html>
