@@ -1,12 +1,11 @@
-// 1) YOUR RAILWAY BACKEND (include the https://)
+// 1) YOUR RAILWAY BACKEND (must include https://)
 const BACKEND = "https://cocoon-scraper-backend-production.up.railway.app";
 
-// DOM references
-const sel  = document.getElementById("brand");
-const out  = document.getElementById("output");
-const btn  = document.getElementById("scrape");
+const sel = document.getElementById("brand");
+const out = document.getElementById("output");
+const btn = document.getElementById("scrape");
 
-// slugify in JS (strip accents + down-case + non-alnum→-)
+// JS slugify (remove accents → lowercase → non-alnum→dash)
 function slugify(s) {
   return s
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -15,26 +14,29 @@ function slugify(s) {
     .replace(/(^-|-$)/g, "");
 }
 
-// 2) Load marques_clean.csv and populate dropdown
+// 2) On load, fetch marques_clean.csv and fill <select>
 window.addEventListener("DOMContentLoaded", async () => {
   try {
-    const txt = await fetch("marques_clean.csv").then(r => r.text());
+    const txt = await fetch("marques_clean.csv").then(r => {
+      if (!r.ok) throw new Error("CSV not found");
+      return r.text();
+    });
     const lines = txt.trim().split("\n");
-    // assume header is "name" (if your CSV has more columns, adjust)
+    // header line: skip it
     sel.innerHTML = `<option value="">— choisissez —</option>`;
     for (let line of lines.slice(1)) {
-      const name = line.split(",")[0];
+      const [name] = line.split(","); // if your CSV uses semicolons, use .split(";") here
       const slug = slugify(name);
       const opt  = new Option(name, slug);
       sel.append(opt);
     }
   } catch (e) {
-    sel.innerHTML = `<option>Erreur de chargement</option>`;
+    sel.innerHTML = `<option>Erreur chargement</option>`;
     console.error(e);
   }
 });
 
-// 3) When clicking “Lancer le scraping…”
+// 3) On click => POST /scrape and offer CSV download
 btn.addEventListener("click", async () => {
   const slug = sel.value;
   if (!slug) {
@@ -45,42 +47,41 @@ btn.addEventListener("click", async () => {
   out.textContent = "⏳ Scraping en cours…";
   try {
     const resp = await fetch(`${BACKEND}/scrape`, {
-      method:  "POST",
-      headers: { "Content-Type":"application/json" },
-      body:    JSON.stringify({ slug })
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug })
     });
     if (!resp.ok) {
       throw new Error(await resp.text());
     }
     const data = await resp.json();
-
-    // 4) Convert JSON → CSV
-    if (!data.length) {
-      out.textContent = "Aucun produit retourné.";
+    if (data.length === 0) {
+      out.textContent = "Aucun produit trouvé.";
       return;
     }
+
+    // Convert JSON → CSV lines
     const keys = Object.keys(data[0]);
-    const csvLines = [
+    const rows = [
       keys.join(","),
       ...data.map(obj =>
-        keys.map(k =>
-          `"${(obj[k]||"").toString().replace(/"/g,'""')}"`
-        ).join(",")
+        keys.map(k => `"${(obj[k]||"").toString().replace(/"/g,'""')}"`)
+            .join(",")
       )
     ];
-    const csvBlob = new Blob([csvLines.join("\r\n")], { type:"text/csv" });
-    const url     = URL.createObjectURL(csvBlob);
+    const blob = new Blob([rows.join("\r\n")], { type: "text/csv" });
+    const url  = URL.createObjectURL(blob);
 
-    // 5) Offer download link
+    // Show download link
     out.innerHTML = "";
     const a = document.createElement("a");
     a.href        = url;
     a.download    = `cocoon_${slug}_${Date.now()}.csv`;
-    a.textContent = "📥 Télécharger les résultats en CSV";
+    a.textContent = "📥 Télécharger les résultats (CSV)";
     out.appendChild(a);
 
   } catch (err) {
-    out.textContent = `🚨 Erreur : ${err.message}`;
+    out.innerHTML = `<span style="color:red">🚨 Erreur : ${err.message}</span>`;
     console.error(err);
   }
 });
